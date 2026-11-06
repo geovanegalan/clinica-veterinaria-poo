@@ -44,3 +44,10 @@ export class MissingDiagnosisError extends Error {
     this.name = "MissingDiagnosisError";
   }
 }
+
+export class NoVeterinariansError extends Error {
+  constructor() {
+    super("Cadastre um veterinário antes de agendar uma consulta.");
+    this.name = "NoVeterinariansError";
+  }
+}

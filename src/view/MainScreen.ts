@@ -3,7 +3,7 @@ import { Appointment } from "../models/Appointment";
 import { Pet } from "../models/Pet";
 import { MainController } from "../controller/MainController";
 import prompt from "../config/promptSync";
-import { DuplicateDataError, EntityNotFoundError, MissingDiagnosisError, OwnerHasNoPetsError } from "../errors/Errors";
+import { AppointmentNotFound, DuplicateDataError, EntityNotFoundError, MissingDiagnosisError, NoVeterinariansError, OwnerHasNoPetsError } from "../errors/Errors";
 import { Status } from "../models/enums/StatusEnums";
 
 export class MainScreen {
@@ -246,7 +246,7 @@ export class MainScreen {
 
       const dateForExam = prompt("Data:");
 
-      const vets = this.controller.getVeterinarians();
+      const vets = this.controller.getVeterinariansForAppointment();
 
       vets.forEach((vet, i) => {
         console.log(`${Cores.destaque(String(i + 1))} - ${vet.getName()}`);
@@ -273,6 +273,8 @@ export class MainScreen {
         console.error(Cores.erro(String("Usuário não encontrado:" + error.message)));
       } else if (error instanceof OwnerHasNoPetsError) {
         console.error(Cores.erro(String("Usuário não tem pets cadastrados:" + error.message)));
+      } else if (error instanceof NoVeterinariansError) {
+        console.log(Cores.aviso(error.message));
       } else {
         console.error(Cores.erro(String("Aconteceu um erro inesperado!" + error)));
       }
@@ -366,7 +368,9 @@ export class MainScreen {
       const appointmentAtualizada = this.controller.getAppointmentById(protocol);
       this.mostrarConsulta(appointmentAtualizada);
     } catch (error: unknown) {
-      if (error instanceof MissingDiagnosisError) {
+      if (error instanceof AppointmentNotFound) {
+        console.error(Cores.erro(error.message));
+      } else if (error instanceof MissingDiagnosisError) {
         console.error(Cores.erro(String("Insira o diagnóstico:" + error.message)));
       } else {
         console.error(Cores.erro(String("Aconteceu um erro inesperado!" + error)));
@@ -453,7 +457,9 @@ export class MainScreen {
       this.controller.cancelAppointment(protocol);
       console.log(Cores.sucesso(`Consulta com protocolo ${protocol} cancelada com sucesso!`));
     } catch (error: unknown) {
-      if (error instanceof Error) {
+      if (error instanceof AppointmentNotFound) {
+        console.error(Cores.erro(error.message));
+      } else if (error instanceof Error) {
         console.error(Cores.erro("Erro: " + error.message));
       } else {
         console.error(Cores.erro("Aconteceu um erro inesperado! " + error));

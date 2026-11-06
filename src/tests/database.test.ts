@@ -1,3 +1,4 @@
+import { AppointmentNotFound } from "../errors/Errors";
 import { Database } from "../database/Database";
 import { PetOwner } from "../models/PetOwner";
 import { Veterinarian } from "../models/Veterinarian";
@@ -56,5 +57,18 @@ describe("Database - busca composta de pets", () => {
     db.cancelAppointment(cancelled.getId()!);
     expect(db.findPets({ examType: ExamType.Hemogram }).map(p => p.getName())).toEqual(["Mimi"]);
     expect(db.findPets({ diagnosis: "normal" }).map(p => p.getName())).toEqual(["Mimi"]);
+  });
+});
+
+describe("Database - consulta inexistente", () => {
+  test("não informa sucesso ao buscar, cancelar ou finalizar um protocolo inexistente", () => {
+    const db = new Database(":memory:");
+    try {
+      expect(() => db.getAppointmentById(999)).toThrow(AppointmentNotFound);
+      expect(() => db.cancelAppointment(999)).toThrow(AppointmentNotFound);
+      expect(() => db.finishAppointment(999, "Saudável")).toThrow(AppointmentNotFound);
+    } finally {
+      db.close();
+    }
   });
 });
