@@ -1,5 +1,5 @@
 import { MainController } from "../controller/MainController";
-import { DuplicateDataError, OwnerHasNoPetsError } from "../errors/Errors";
+import { DuplicateDataError, NoVeterinariansError, OwnerHasNoPetsError } from "../errors/Errors";
 import { IDatabase } from "../interfaces/IDatabase";
 import { Pet } from "../models/Pet";
 import { PetOwner } from "../models/PetOwner";
@@ -166,5 +166,17 @@ describe("MainController.findPets", () => {
     expect(database.findPets).not.toHaveBeenCalled();
     controller.findPets({ examType: ExamType.Hemogram });
     expect(database.findPets).toHaveBeenCalledWith({ examType: ExamType.Hemogram });
+  });
+});
+
+describe("MainController - veterinários para agendamento", () => {
+  test("lança erro personalizado quando não há veterinários", () => {
+    const database = { getVeterinarians: jest.fn().mockReturnValue([]) } as unknown as jest.Mocked<IDatabase>;
+    expect(() => new MainController(database).getVeterinariansForAppointment()).toThrow(NoVeterinariansError);
+  });
+  test("retorna veterinários cadastrados", () => {
+    const vet = new Veterinarian("Samara", "123", "s@email.com", "12345");
+    const database = { getVeterinarians: jest.fn().mockReturnValue([vet]) } as unknown as jest.Mocked<IDatabase>;
+    expect(new MainController(database).getVeterinariansForAppointment()).toEqual([vet]);
   });
 });

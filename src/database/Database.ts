@@ -6,7 +6,7 @@ import { Pet } from "../models/Pet";
 import { Appointment } from "../models/Appointment";
 import { IDatabase } from "../interfaces/IDatabase";
 import { ExamType } from "../models/enums/ExamTypeEnums";
-import { DatabaseErrorNoId, EntityNotFoundError } from "../errors/Errors";
+import { AppointmentNotFound, DatabaseErrorNoId, EntityNotFoundError } from "../errors/Errors";
 import { Status } from "../models/enums/StatusEnums";
 
 export class Database implements IDatabase {
@@ -289,7 +289,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     const row = stmt.get(id);
 
     if (!row) {
-      throw new EntityNotFoundError(id);
+      throw new AppointmentNotFound(id);
     }
 
     const pet = this.getPetById(row.pet_id as number);
@@ -493,7 +493,7 @@ CREATE TABLE IF NOT EXISTS appointments (
         WHERE id = ?
     `);
 
-    stmt.run(diagnosis, Status.Realized, id);
+    if (stmt.run(diagnosis, Status.Realized, id).changes === 0) throw new AppointmentNotFound(id);
   }
 
   cancelAppointment(id: number): void {
@@ -503,6 +503,6 @@ CREATE TABLE IF NOT EXISTS appointments (
         WHERE id = ?
     `);
 
-    stmt.run(Status.Cancelled, id);
+    if (stmt.run(Status.Cancelled, id).changes === 0) throw new AppointmentNotFound(id);
   }
 }

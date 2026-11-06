@@ -13,6 +13,7 @@ import {
   DuplicateDataError,
   EntityNotFoundError,
   MissingDiagnosisError,
+  NoVeterinariansError,
   OwnerHasNoPetsError,
 } from "../errors/Errors";
 
@@ -56,6 +57,12 @@ export class MainController {
   public getVeterinarians(): Veterinarian[] {
     const vets = this.database.getVeterinarians();
     return sortList(vets, (a, b) => a.getName().localeCompare(b.getName()));
+  }
+
+  public getVeterinariansForAppointment(): Veterinarian[] {
+    const veterinarians = this.getVeterinarians();
+    if (veterinarians.length === 0) throw new NoVeterinariansError();
+    return veterinarians;
   }
 
   public getAllUsers(): User[] {
