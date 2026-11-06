@@ -1,3 +1,4 @@
+import { PetSearch } from "./PetSearch";
 import { Appointment } from "../models/Appointment";
 import { Pet } from "../models/Pet";
 import { PetOwner } from "../models/PetOwner";
@@ -36,7 +37,7 @@ export interface IDatabase {
 
   getPetsByOwnerId(id: number): Pet[];
 
-  findPetsByDiagnosis(keyword: string): Pet[];
+  findPets(search: PetSearch): Pet[];
 
   findVetByCrmv(crmv: string): Veterinarian | undefined;
 

@@ -42,3 +42,13 @@ describe("MainController - realizar consulta", () => {
 		expect(database.finishAppointment).toHaveBeenCalledWith(5, "Gripe canina");
 	});
 });
+
+describe("MainController - diagnóstico obrigatório", () => {
+  test("não finaliza consulta com diagnóstico em branco", () => {
+    const appointment = { getDiagnosis: () => "" } as Appointment;
+    const database = { getAppointmentById: jest.fn().mockReturnValue(appointment), finishAppointment: jest.fn() } as unknown as jest.Mocked<IDatabase>;
+    const controller = new MainController(database);
+    expect(() => controller.finishAppointment(1, "   ")).toThrow("Para finalizar a consulta");
+    expect(database.finishAppointment).not.toHaveBeenCalled();
+  });
+});

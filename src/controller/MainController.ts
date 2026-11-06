@@ -1,3 +1,4 @@
+import { PetSearch } from "../interfaces/PetSearch";
 import { PetOwner } from "../models/PetOwner";
 import { IDatabase } from "../interfaces/IDatabase";
 import { Veterinarian } from "../models/Veterinarian";
@@ -109,12 +110,16 @@ export class MainController {
     return sortList(appointments, (a, b) => a.getExamType().localeCompare(b.getExamType()));
   }
 
-  public findPetsByDiagnosis(keyword: string): Pet[] {
-    if (!keyword || keyword.trim().length === 0) {
-      return [];
+  public findPets(search: PetSearch): Pet[] {
+    const specie = search.specie?.trim();
+    if (search.diagnosis !== undefined) {
+      const diagnosis = search.diagnosis.trim();
+      if (!diagnosis) return [];
+      return sortList(this.database.findPets({ ...(specie ? { specie } : {}), diagnosis: diagnosis.toLowerCase() }),
+        (a, b) => a.getName().localeCompare(b.getName()));
     }
-    const pets = this.database.findPetsByDiagnosis(keyword.trim().toLowerCase());
-    return sortList(pets, (a, b) => a.getName().localeCompare(b.getName()));
+    return sortList(this.database.findPets({ ...(specie ? { specie } : {}), examType: search.examType }),
+      (a, b) => a.getName().localeCompare(b.getName()));
   }
 
   public getAppointmentById(id: number): Appointment {

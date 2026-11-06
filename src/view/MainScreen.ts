@@ -30,7 +30,7 @@ export class MainScreen {
         9 - Realizar Consulta (registrar diagnóstico)
         10 - Listar todos os Usuários do sistema
         11 - Buscar Consultas por Status (Agendadas, Realizadas, Canceladas)
-        12 - Buscar Pets por Diagnóstico (palavra-chave)
+        12 - Buscar Pets por Espécie e Diagnóstico ou Exame
         13 - Cancelar Consulta
         0 - Sair
         \nDigite a opção desejada: `);
@@ -92,8 +92,8 @@ export class MainScreen {
           break;
 
         case 12:
-          console.log("Executando: Buscar Pets por Diagnóstico");
-          this.searchPetsByDiagnosis();
+          console.log("Executando: Buscar Pets por Espécie e Diagnóstico ou Exame");
+          this.searchPets();
           break;
 
         case 13:
@@ -369,30 +369,38 @@ export class MainScreen {
     }
   }
 
-  public searchPetsByDiagnosis(): void {
+  public searchPets(): void {
     try {
-      const keyword = prompt("Digite a palavra-chave do diagnóstico (ex: felv): ");
-      if (!keyword || keyword.trim().length === 0) {
-        console.log("Palavra-chave não informada!");
-        return;
-      }
-
-      const pets = this.controller.findPetsByDiagnosis(keyword);
-      if (pets.length === 0) {
-        console.log(`Nenhum pet encontrado com o diagnóstico contendo '${keyword}'.`);
-        return;
-      }
-
-      console.log(`Pets encontrados com diagnóstico contendo '${keyword}':`);
-      pets.forEach((p) => {
-        console.log(`---------------------------\n${p.showSummary()}\n---------------------------`);
-      });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.log("Message:" + error.message);
+      const specie = prompt("Espécie (deixe em branco para todas): ").trim();
+      const option = +prompt("Buscar por: 1 - Diagnóstico | 2 - Exame realizado: ");
+      let pets;
+      if (option === 1) {
+        const diagnosis = prompt("Palavra-chave do diagnóstico: ").trim();
+        if (!diagnosis) {
+          console.log("Palavra-chave não informada!");
+          return;
+        }
+        pets = this.controller.findPets({ ...(specie ? { specie } : {}), diagnosis });
+      } else if (option === 2) {
+        const exams = this.controller.getExams();
+        exams.forEach((exam, i) => console.log(`${i + 1} - ${exam}`));
+        const index = +prompt("Selecione o exame: ");
+        if (!Number.isInteger(index) || index < 1 || index > exams.length) {
+          console.log("Exame inválido!");
+          return;
+        }
+        pets = this.controller.findPets({ ...(specie ? { specie } : {}), examType: exams[index - 1]! });
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.log("Opção inválida!");
+        return;
       }
+      if (pets.length === 0) {
+        console.log("Nenhum pet encontrado para os filtros informados.");
+        return;
+      }
+      pets.forEach((pet) => console.log(`---------------------------\n${pet.showSummary()}\n---------------------------`));
+    } catch (error: unknown) {
+      console.error("Ocorreu um erro ao buscar pets:", error);
     }
   }
 

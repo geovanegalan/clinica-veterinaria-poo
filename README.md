@@ -10,7 +10,7 @@ O objetivo é praticar e fixar conceitos de POO usando um problema concreto. O p
 - Agendar consultas ou exames para um pet com um veterinário.
 - Registrar diagnósticos e cancelar consultas.
 - Listar tutores, veterinários, pets, consultas e usuários.
-- Buscar consultas por status e pets por palavra-chave no diagnóstico.
+- Buscar consultas por status e pets por espécie (ou todas), combinada com diagnóstico ou tipo de exame realizado.
 - Salvar dados em SQLite entre execuções e ordenar listagens.
 
 ## Tecnologias e requisitos
