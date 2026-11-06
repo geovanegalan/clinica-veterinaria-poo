@@ -1,3 +1,6 @@
+import { Cores } from "./Cores";
+import { Appointment } from "../models/Appointment";
+import { Pet } from "../models/Pet";
 import { MainController } from "../controller/MainController";
 import prompt from "../config/promptSync";
 import { DuplicateDataError, EntityNotFoundError, MissingDiagnosisError, OwnerHasNoPetsError } from "../errors/Errors";
@@ -10,6 +13,36 @@ export class MainScreen {
     this.controller = controller;
   }
 
+  private campo(nome: string, valor: string | number | undefined): string {
+    return `${Cores.destaque(nome + ":")} ${valor ?? "—"}`;
+  }
+
+  private separador(): void {
+    console.log(Cores.discreto("-----------------------------------"));
+  }
+
+  private mostrarPet(pet: Pet): void {
+    this.separador();
+    console.log(this.campo("Nome", pet.getName()));
+    console.log(this.campo("Espécie", pet.getSpecie()));
+    console.log(this.campo("Tutor", pet.getOwner().getName()));
+    console.log(this.campo("Histórico", pet.getHistory() || "—"));
+  }
+
+  private mostrarConsulta(consulta: Appointment): void {
+    this.separador();
+    const status = consulta.getStatus();
+    const statusFormatado = status === Status.Realized ? Cores.sucesso(status)
+      : status === Status.Cancelled ? Cores.erro(status) : Cores.aviso(status);
+    console.log(this.campo("Protocolo", consulta.getId()));
+    console.log(this.campo("Status", statusFormatado));
+    console.log(this.campo("Paciente", consulta.getPet().getName()));
+    console.log(this.campo("Data", consulta.getDate()));
+    console.log(this.campo("Exame", consulta.getExamType()));
+    console.log(this.campo("Médico veterinário", `${consulta.getVeterinarian().getName()} - CRMV ${consulta.getVeterinarian().getCrmv()}`));
+    console.log(this.campo("Diagnóstico", consulta.getDiagnosis() || "—"));
+  }
+
   public start(): void {
     this.showOptions();
   }
@@ -18,6 +51,7 @@ export class MainScreen {
     let op: number = 999;
 
     while (op !== 0) {
+      console.log(Cores.titulo("\n========== CLÍNICA VETERINÁRIA =========="));
       op = +prompt(`
         1 - Cadastrar Dono
         2 - Cadastrar Veterinário
@@ -37,76 +71,76 @@ export class MainScreen {
 
       switch (op) {
         case 1:
-          console.log("Executando: Cadastrar Dono");
+          console.log(Cores.titulo("\nCadastrar Dono"));
           this.registerOwner();
           break;
 
         case 2:
-          console.log("Executando: Cadastrar Veterinário");
+          console.log(Cores.titulo("\nCadastrar Veterinário"));
           this.registerVeterinarian();
           break;
 
         case 3:
-          console.log("Executando: Cadastrar Pet");
+          console.log(Cores.titulo("\nCadastrar Pet"));
           this.registerPet();
           break;
 
         case 4:
-          console.log("Executando: Agendar Consulta");
+          console.log(Cores.titulo("\nAgendar Consulta"));
           this.appointExam();
           break;
 
         case 5:
-          console.log("Executando: Listar Veterinários");
+          console.log(Cores.titulo("\nListar Veterinários"));
           this.showVets();
           break;
 
         case 6:
-          console.log("Executando: Listar Pets");
+          console.log(Cores.titulo("\nListar Pets"));
           this.showPets();
           break;
 
         case 7:
-          console.log("Executando: Listar Donos");
+          console.log(Cores.titulo("\nListar Donos"));
           this.showOwners();
           break;
 
         case 8:
-          console.log("Executando: Listar Consultas");
+          console.log(Cores.titulo("\nListar Consultas"));
           this.showAppointments();
           break;
 
         case 9:
-          console.log("Executando: Realizar Consulta (registrar diagnóstico)");
+          console.log(Cores.titulo("\nRealizar Consulta (registrar diagnóstico)"));
           this.realizeAppointment();
           break;
 
         case 10:
-          console.log("Executando: Listar todos os usuários");
+          console.log(Cores.titulo("\nListar todos os usuários"));
           this.showAllUsers();
           break;
 
         case 11:
-          console.log("Executando: Buscar Consultas por Status");
+          console.log(Cores.titulo("\nBuscar Consultas por Status"));
           this.searchAppointmentsByStatus();
           break;
 
         case 12:
-          console.log("Executando: Buscar Pets por Espécie e Diagnóstico ou Exame");
+          console.log(Cores.titulo("\nBuscar Pets por Espécie e Diagnóstico ou Exame"));
           this.searchPets();
           break;
 
         case 13:
-          console.log("Executando: Cancelar Consulta");
+          console.log(Cores.titulo("\nCancelar Consulta"));
           this.cancelAppointment();
           break;
 
         case 0:
-          console.log("Saindo do sistema... Até logo!");
+          console.log(Cores.sucesso("Saindo do sistema... Até logo!"));
           break;
 
         default:
-          console.log("Opção inválida! Por favor, escolha um número válido do menu.");
+          console.log(Cores.aviso("Opção inválida! Por favor, escolha um número válido do menu."));
           break;
       }
     }
@@ -119,12 +153,12 @@ export class MainScreen {
       const cpf = prompt("CPF:");
 
       this.controller.createPetOwner(name, email, cpf);
-      console.log("Usuário cadastrado com sucesso!");
+      console.log(Cores.sucesso("Usuário cadastrado com sucesso!"));
     } catch (error: unknown) {
       if (error instanceof DuplicateDataError) {
-        console.error("Dado duplicado:" + error.message);
+        console.error(Cores.erro(String("Dado duplicado:" + error.message)));
       } else {
-        console.error("Ocorreu um erro inesperado!" + error);
+        console.error(Cores.erro(String("Ocorreu um erro inesperado!" + error)));
       }
     }
   }
@@ -137,12 +171,12 @@ export class MainScreen {
       const crmv = prompt("CRMV:");
 
       this.controller.createVeterinarian(name, email, cpf, crmv);
-      console.log("Veterinário cadastrado com sucesso!");
+      console.log(Cores.sucesso("Veterinário cadastrado com sucesso!"));
     } catch (error: unknown) {
       if (error instanceof DuplicateDataError) {
-        console.error("Dado duplicado:" + error.message);
+        console.error(Cores.erro(String("Dado duplicado:" + error.message)));
       } else {
-        console.error("Ocorreu um erro inesperado!" + error);
+        console.error(Cores.erro(String("Ocorreu um erro inesperado!" + error)));
       }
     }
   }
@@ -161,12 +195,12 @@ export class MainScreen {
       } else {
         this.controller.createPet(name, specie, age, ownercpf);
       }
-      console.log("Pet Cadastrado com sucesso!");
+      console.log(Cores.sucesso("Pet Cadastrado com sucesso!"));
     } catch (error: unknown) {
       if (error instanceof EntityNotFoundError) {
-        console.error("Usuário não encontrado:" + error.message);
+        console.error(Cores.erro(String("Usuário não encontrado:" + error.message)));
       } else {
-        console.error("Ocorreu um erro inesperado!" + error);
+        console.error(Cores.erro(String("Ocorreu um erro inesperado!" + error)));
       }
     }
   }
@@ -177,7 +211,7 @@ export class MainScreen {
       const petsOwner = this.controller.getPetsOwnerByCpf(cpf);
 
       petsOwner.forEach((pet, i) => {
-        console.log(`${i + 1} - ${pet.getName()} (${pet.getSpecie()})`);
+        console.log(`${Cores.destaque(String(i + 1))} - ${pet.getName()} (${pet.getSpecie()})`);
       });
 
       let num: number;
@@ -186,7 +220,7 @@ export class MainScreen {
         num = +prompt("Qual pet gostaria de agendar?:");
 
         if (num < 1 || num > petsOwner.length || !Number.isInteger(num)) {
-          console.log("Pet inválido! Escolha um número da lista.");
+          console.log(Cores.aviso("Pet inválido! Escolha um número da lista."));
         }
       } while (num < 1 || num > petsOwner.length || !Number.isInteger(num));
 
@@ -195,7 +229,7 @@ export class MainScreen {
       const exams = this.controller.getExams();
 
       exams.forEach((exam, i) => {
-        console.log(`${i + 1} - ${exam}`);
+        console.log(`${Cores.destaque(String(i + 1))} - ${exam}`);
       });
 
       let examNum: number;
@@ -204,7 +238,7 @@ export class MainScreen {
         examNum = +prompt("Qual exame gostaria de agendar?");
 
         if (examNum < 1 || examNum > exams.length || !Number.isInteger(examNum)) {
-          console.log("Exame inválido! Escolha um número da lista.");
+          console.log(Cores.aviso("Exame inválido! Escolha um número da lista."));
         }
       } while (examNum < 1 || examNum > exams.length || !Number.isInteger(examNum));
 
@@ -215,7 +249,7 @@ export class MainScreen {
       const vets = this.controller.getVeterinarians();
 
       vets.forEach((vet, i) => {
-        console.log(`${i + 1} - ${vet.getName()}`);
+        console.log(`${Cores.destaque(String(i + 1))} - ${vet.getName()}`);
       });
 
       let vetIndex: number;
@@ -224,7 +258,7 @@ export class MainScreen {
         vetIndex = +prompt("Selecione o médico veterinario:");
 
         if (vetIndex < 1 || vetIndex > vets.length || !Number.isInteger(vetIndex)) {
-          console.log("Veterinário inválido! Escolha um número da lista.");
+          console.log(Cores.aviso("Veterinário inválido! Escolha um número da lista."));
         }
       } while (vetIndex < 1 || vetIndex > vets.length || !Number.isInteger(vetIndex));
 
@@ -232,15 +266,15 @@ export class MainScreen {
 
       this.controller.createAppointment(exam, dateForExam, pet, selectedVet);
 
-      console.log("Consulta agendada com sucesso!");
-      console.log(`Paciente:${pet.getName()}\nData:${dateForExam}\nMédico Veterinario: ${selectedVet.getName()}`);
+      console.log(Cores.sucesso("Consulta agendada com sucesso!"));
+      console.log([this.campo("Paciente", pet.getName()), this.campo("Data", dateForExam), this.campo("Médico veterinário", selectedVet.getName())].join("\n"));
     } catch (error: unknown) {
       if (error instanceof EntityNotFoundError) {
-        console.error("Usuário não encontrado:" + error.message);
+        console.error(Cores.erro(String("Usuário não encontrado:" + error.message)));
       } else if (error instanceof OwnerHasNoPetsError) {
-        console.error("Usuário não tem pets cadastrados:" + error.message);
+        console.error(Cores.erro(String("Usuário não tem pets cadastrados:" + error.message)));
       } else {
-        console.error("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro(String("Aconteceu um erro inesperado!" + error)));
       }
     }
   }
@@ -249,13 +283,15 @@ export class MainScreen {
     try {
       const vets = this.controller.getVeterinarians();
       vets.forEach((v) => {
-        console.log(`---------------------------\n${v.showData()}\n---------------------------`);
+        this.separador();
+        console.log(this.campo("Nome", v.getName()));
+        console.log(this.campo("CRMV", v.getCrmv()));
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
@@ -264,13 +300,13 @@ export class MainScreen {
     try {
       const pets = this.controller.getPets();
       pets.forEach((p) => {
-        console.log(`---------------------------\n${p.showSummary()}\n---------------------------`);
+        this.mostrarPet(p);
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
@@ -279,13 +315,16 @@ export class MainScreen {
     try {
       const owners = this.controller.getOwners();
       owners.forEach((o) => {
-        console.log(`---------------------------\n${o.showData()}\n---------------------------`);
+        this.separador();
+        console.log(this.campo("Nome", o.getName()));
+        console.log(this.campo("CPF", o.getCpf()));
+        console.log(this.campo("Contato", o.getEmail()));
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
@@ -294,49 +333,53 @@ export class MainScreen {
     try {
       const appointments = this.controller.getAppointments();
       appointments.forEach((a) => {
-        console.log(a.showDataAppointment());
+        this.mostrarConsulta(a);
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
 
   public showAllUsers(): void {
     const usuarios = this.controller.getAllUsers();
-    usuarios.forEach((u) => console.log(`${u.getName()} — ${u.getRole()}`));
+    usuarios.forEach((u) => {
+      this.separador();
+      console.log(this.campo("Nome", u.getName()));
+      console.log(this.campo("Papel", u.getRole()));
+    });
   }
 
   public realizeAppointment(): void {
     try {
       const protocol = +prompt("Insira o número do protocolo do exame:");
       const appointment = this.controller.getAppointmentById(protocol);
-      console.log(appointment.showDataAppointment());
+      this.mostrarConsulta(appointment);
 
       const diagnosis = prompt("Dignóstico:");
 
       this.controller.finishAppointment(protocol, diagnosis);
-      console.log("Exame finalizado com sucesso!");
+      console.log(Cores.sucesso("Exame finalizado com sucesso!"));
       const appointmentAtualizada = this.controller.getAppointmentById(protocol);
-      console.log(appointmentAtualizada.showDataAppointment());
+      this.mostrarConsulta(appointmentAtualizada);
     } catch (error: unknown) {
       if (error instanceof MissingDiagnosisError) {
-        console.error("Insira o diagnóstico:" + error.message);
+        console.error(Cores.erro(String("Insira o diagnóstico:" + error.message)));
       } else {
-        console.error("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro(String("Aconteceu um erro inesperado!" + error)));
       }
     }
   }
 
   public searchAppointmentsByStatus(): void {
     try {
-      console.log("Selecione o status da consulta:");
-      console.log("1 - Agendada");
-      console.log("2 - Realizada");
-      console.log("3 - Cancelada");
+      console.log(Cores.titulo("Selecione o status da consulta:"));
+      console.log(Cores.aviso("1 - Agendada"));
+      console.log(Cores.sucesso("2 - Realizada"));
+      console.log(Cores.erro("3 - Cancelada"));
       const option = +prompt("Opção: ");
       let status: Status;
 
@@ -347,24 +390,24 @@ export class MainScreen {
       } else if (option === 3) {
         status = Status.Cancelled;
       } else {
-        console.log("Opção de status inválida!");
+        console.log(Cores.aviso("Opção de status inválida!"));
         return;
       }
 
       const appointments = this.controller.getAppointmentsByStatus(status);
       if (appointments.length === 0) {
-        console.log(`Nenhuma consulta encontrada com o status '${status}'.`);
+        console.log(Cores.aviso(`Nenhuma consulta encontrada com o status '${status}'.`));
         return;
       }
 
       appointments.forEach((a) => {
-        console.log(a.showDataAppointment());
+        this.mostrarConsulta(a);
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
@@ -377,7 +420,7 @@ export class MainScreen {
       if (option === 1) {
         const diagnosis = prompt("Palavra-chave do diagnóstico: ").trim();
         if (!diagnosis) {
-          console.log("Palavra-chave não informada!");
+          console.log(Cores.aviso("Palavra-chave não informada!"));
           return;
         }
         pets = this.controller.findPets({ ...(specie ? { specie } : {}), diagnosis });
@@ -386,21 +429,21 @@ export class MainScreen {
         exams.forEach((exam, i) => console.log(`${i + 1} - ${exam}`));
         const index = +prompt("Selecione o exame: ");
         if (!Number.isInteger(index) || index < 1 || index > exams.length) {
-          console.log("Exame inválido!");
+          console.log(Cores.aviso("Exame inválido!"));
           return;
         }
         pets = this.controller.findPets({ ...(specie ? { specie } : {}), examType: exams[index - 1]! });
       } else {
-        console.log("Opção inválida!");
+        console.log(Cores.aviso("Opção inválida!"));
         return;
       }
       if (pets.length === 0) {
-        console.log("Nenhum pet encontrado para os filtros informados.");
+        console.log(Cores.aviso("Nenhum pet encontrado para os filtros informados."));
         return;
       }
-      pets.forEach((pet) => console.log(`---------------------------\n${pet.showSummary()}\n---------------------------`));
+      pets.forEach((pet) => this.mostrarPet(pet));
     } catch (error: unknown) {
-      console.error("Ocorreu um erro ao buscar pets:", error);
+      console.error(Cores.erro("Ocorreu um erro ao buscar pets: " + String(error)));
     }
   }
 
@@ -408,12 +451,12 @@ export class MainScreen {
     try {
       const protocol = +prompt("Insira o número do protocolo da consulta a ser cancelada: ");
       this.controller.cancelAppointment(protocol);
-      console.log(`Consulta com protocolo ${protocol} cancelada com sucesso!`);
+      console.log(Cores.sucesso(`Consulta com protocolo ${protocol} cancelada com sucesso!`));
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.log("Message:" + error.message);
+        console.error(Cores.erro("Erro: " + error.message));
       } else {
-        console.log("Aconteceu um erro inesperado!" + error);
+        console.error(Cores.erro("Aconteceu um erro inesperado! " + error));
       }
     }
   }
