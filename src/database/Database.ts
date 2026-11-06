@@ -1,3 +1,4 @@
+import { PetSearch } from "../interfaces/PetSearch";
 import { DatabaseSync } from "node:sqlite";
 import { PetOwner } from "../models/PetOwner";
 import { Veterinarian } from "../models/Veterinarian";
@@ -11,8 +12,8 @@ import { Status } from "../models/enums/StatusEnums";
 export class Database implements IDatabase {
   private db: DatabaseSync;
 
-  constructor() {
-    this.db = new DatabaseSync("./database/clinica.db");
+  constructor(path: string = "./database/clinica.db") {
+    this.db = new DatabaseSync(path);
 
     this.db.exec(`CREATE TABLE IF NOT EXISTS veterinarians (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,6 +63,10 @@ CREATE TABLE IF NOT EXISTS appointments (
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 );`);
+  }
+
+  close(): void {
+    this.db.close();
   }
 
   getExams(): ExamType[] {
@@ -345,17 +350,19 @@ CREATE TABLE IF NOT EXISTS appointments (
     });
   }
 
-  findPetsByDiagnosis(keyword: string): Pet[] {
+  findPets(search: PetSearch): Pet[] {
+    const byDiagnosis = search.diagnosis !== undefined;
     const stmt = this.db.prepare(`
         SELECT DISTINCT p.id, p.pet_owner_id, p.name, p.specie, p.age, p.history
         FROM appointments a
         JOIN pets p ON a.pet_id = p.id
-        WHERE a.status = 'REALIZADO' AND LOWER(a.diagnosis) LIKE ?
+        WHERE a.status = ?
+          AND (? IS NULL OR LOWER(TRIM(p.specie)) = LOWER(?))
+          AND ${byDiagnosis ? "LOWER(a.diagnosis) LIKE ?" : "a.exam_type = ?"}
     `);
-
-    const pattern = `%${keyword.toLowerCase()}%`;
-    const rows = stmt.all(pattern);
-
+    const specie = search.specie || null;
+    const criterion = byDiagnosis ? `%${search.diagnosis!.toLowerCase()}%` : search.examType!;
+    const rows = stmt.all(Status.Realized, specie, specie, criterion);
     return rows.map((row) => {
       const owner = this.getOwnerById(row.pet_owner_id as number);
       const pet = new Pet(owner, row.name as string, row.specie as string, row.age as number, row.history as string);

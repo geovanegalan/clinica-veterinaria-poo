@@ -151,37 +151,20 @@ describe("MainController.getAppointmentsByStatus", () => {
   });
 });
 
-describe("MainController.findPetsByDiagnosis", () => {
-  let database: jest.Mocked<IDatabase>;
-  let controller: MainController;
-
-  beforeEach(() => {
-    database = {
-      findPetsByDiagnosis: jest.fn(),
-    } as unknown as jest.Mocked<IDatabase>;
-
-    controller = new MainController(database);
+describe("MainController.findPets", () => {
+  test("normaliza o diagnóstico e ordena os resultados", () => {
+    const owner = new PetOwner("Marina", "123", "m@email.com");
+    const database = { findPets: jest.fn().mockReturnValue([new Pet(owner, "Zack", "Gato", 4), new Pet(owner, "Bela", "Gato", 2)]) } as unknown as jest.Mocked<IDatabase>;
+    const result = new MainController(database).findPets({ specie: " Gato ", diagnosis: " FeLV " });
+    expect(database.findPets).toHaveBeenCalledWith({ specie: "Gato", diagnosis: "felv" });
+    expect(result.map(p => p.getName())).toEqual(["Bela", "Zack"]);
   });
-
-  test("Deve retornar pets correspondentes ao diagnóstico de forma case insensitive e ordenados por nome", () => {
-    const owner = new PetOwner("Marina", "99988877766", "marina@email.com");
-    const pet1 = new Pet(owner, "Zack", "Gato", 4);
-    const pet2 = new Pet(owner, "Bela", "Gato", 2);
-
-    database.findPetsByDiagnosis.mockReturnValue([pet1, pet2]);
-
-    const result = controller.findPetsByDiagnosis("felv");
-
-    expect(database.findPetsByDiagnosis).toHaveBeenCalledWith("felv");
-    expect(result).toHaveLength(2);
-    expect(result[0]!.getName()).toBe("Bela");
-    expect(result[1]!.getName()).toBe("Zack");
-  });
-
-  test("Deve retornar array vazio quando o termo de busca for vazio", () => {
-    const result = controller.findPetsByDiagnosis("   ");
-
-    expect(result).toEqual([]);
-    expect(database.findPetsByDiagnosis).not.toHaveBeenCalled();
+  test("não busca diagnóstico vazio e aceita exame para todas as espécies", () => {
+    const database = { findPets: jest.fn().mockReturnValue([]) } as unknown as jest.Mocked<IDatabase>;
+    const controller = new MainController(database);
+    expect(controller.findPets({ diagnosis: "  " })).toEqual([]);
+    expect(database.findPets).not.toHaveBeenCalled();
+    controller.findPets({ examType: ExamType.Hemogram });
+    expect(database.findPets).toHaveBeenCalledWith({ examType: ExamType.Hemogram });
   });
 });

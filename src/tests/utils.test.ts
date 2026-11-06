@@ -17,3 +17,9 @@ describe("sortList (função genérica de ordenação)", () => {
 		expect(result).toEqual(["a", "b", "c", "d"]);
 	});
 });
+
+test("sortList preserva a lista original", () => {
+  const original = [3, 1, 2];
+  expect(sortList(original, (a, b) => a - b)).toEqual([1, 2, 3]);
+  expect(original).toEqual([3, 1, 2]);
+});

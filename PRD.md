@@ -65,7 +65,7 @@ Quem opera a clínica (atendente ou veterinário), usando um menu numérico no t
 | 9   | Realizar consulta        | Informa o protocolo e registra o diagnóstico.                             |
 | 10  | Listar todos os usuários | Donos e veterinários juntos, cada um com seu papel.                       |
 | 11  | Buscar consultas por status | Filtra consultas por AGENDADO, REALIZADO ou CANCELADO.                 |
-| 12  | Buscar pets por diagnóstico | Busca pets a partir de palavras-chave no diagnóstico (case-insensitive).|
+| 12  | Buscar pets por filtros | Combina espécie opcional com diagnóstico ou tipo de exame realizado.|
 | 13  | Cancelar consulta        | Altera o status da consulta para CANCELADO a partir do protocolo.         |
 
 ## 6. Regras de negócio
